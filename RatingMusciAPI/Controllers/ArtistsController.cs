@@ -115,6 +115,7 @@ public class ArtistsController : ControllerBase
 
 
     [HttpPost]
+    [Authorize(Policy ="ModOnly")]
     public async Task<ActionResult<Artist>> Post(Artist artist)
     { 
         if(artist == null)
@@ -126,7 +127,10 @@ public class ArtistsController : ControllerBase
         return new CreatedAtRouteResult("GetArtist", new { name = artist.Name });
     }
 
+
     [HttpPut("{id:int}")]
+    [Authorize(Policy = "ModOnly")]
+
     public async Task<ActionResult<Artist>> Put(int id, Artist artist)
     {
         if (id != artist.ArtistId)
@@ -140,6 +144,7 @@ public class ArtistsController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [Authorize(Policy ="AdminOnly")]
     public async Task<ActionResult<Artist>> Delete(int id)
     {
         var artist = await _unitOfWork.ArtistsRepository.GetAsync(a => a.ArtistId == id);

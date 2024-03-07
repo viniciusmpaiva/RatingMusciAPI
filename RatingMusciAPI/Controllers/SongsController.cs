@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
@@ -55,6 +56,7 @@ public class SongsController : Controller
     }
 
     [HttpPost]
+    [Authorize(Policy = "ModOnly")]
     public async Task<ActionResult<SongDTO>> Post(Song song)
     {
         if(song is null)
@@ -68,6 +70,8 @@ public class SongsController : Controller
     }
 
     [HttpPut("{id}")]
+    [Authorize(Policy = "ModOnly")]
+
     public async Task<ActionResult<SongDTO>> Put(int id, SongDTO songDTO)
     {
         var findSong = _unitOfWork.SongsRepository.GetAsync(s=>s.SongId == id);
@@ -83,6 +87,7 @@ public class SongsController : Controller
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Policy ="AdminOnly")]
     public async Task<ActionResult<SongDTO>> Delete(int id)
     {
         var song = await _unitOfWork.SongsRepository.GetAsync(s=>s.SongId == id);
