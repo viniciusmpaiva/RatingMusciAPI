@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
@@ -83,6 +84,7 @@ public class AlbumsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy ="ModOnly")]
     public async Task<ActionResult<AlbumDTO>> Post(Album album)
     {
         _unitOfWork.AlbumsRepository.Create(album);
@@ -92,6 +94,8 @@ public class AlbumsController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Policy = "ModOnly")]
+
     public async Task<ActionResult<Album>> Put(Album album, int id)
     {
         if(id != album.AlbumId)
@@ -105,6 +109,7 @@ public class AlbumsController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [Authorize(Policy ="AdminOnly")]
     public async Task<ActionResult<Album>> Delete(int id)
     {
         var album = await _unitOfWork.AlbumsRepository.GetAsync(a => a.AlbumId == id);
