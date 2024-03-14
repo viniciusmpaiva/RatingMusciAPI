@@ -13,6 +13,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
+using System.Threading.RateLimiting;
+using RatingMusciAPI.RateLimitOptions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -123,6 +125,29 @@ builder.Services.AddAuthentication(options =>
 });
 
 
+var myOptions = new MyRateLimitOptions();
+
+builder.Configuration.GetSection(MyRateLimitOptions.MyRateLimit).Bind(myOptions);
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+                                                                                RateLimitPartition.GetFixedWindowLimiter(
+                                                                                    partitionKey: httpContext.User.Identity?.Name ??
+                                                                                    httpContext.Request.Headers.Host.ToString(),
+
+                                                         factory: partition => new FixedWindowRateLimiterOptions
+                                                         {
+                                                             AutoReplenishment = myOptions.AutoReplenishment,
+                                                             PermitLimit = myOptions.PermitLimit,
+                                                             QueueLimit = myOptions.QueueLimit,
+                                                             Window = TimeSpan.FromSeconds(myOptions.Window),
+                                                         }));
+});
+
+
 builder.Services.AddScoped<IArtistsRepository,ArtistRepository>();
 builder.Services.AddScoped<IAlbumsRepository, AlbumRepository>();
 builder.Services.AddScoped<ISongsRepository, SongRepository>();
@@ -149,6 +174,8 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+app.UseRateLimiter();
 
 app.UseCors();
 
